@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(janitor)
 
 # hopkins dataset
 ###https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv
@@ -11,6 +12,18 @@ number_of_days <- 44
 
 # Read in data
 dfhop <- read.table(filename, check.names=FALSE,  header=TRUE,sep=",")
+
+# Add new row with total cases in us
+us_total <- dfhop[dfhop$Country == "US",]
+us_total <- colSums(us_total[days])
+us_total <- data.frame("Province/State"="","Country/Region"="US Total",Lat="",Long="",t(us_total),check.names=FALSE)
+dfhop <- rbind(dfhop, us_total)
+
+china_total <- dfhop[dfhop$Country == "Mainland China",]
+china_total <- colSums(china_total[days])
+china_total <- data.frame("Province/State"="","Country/Region"="China Total",Lat="",Long="",t(china_total),check.names=FALSE)
+dfhop <- rbind(dfhop, china_total)
+
 
 # Generate timestamp
 days <- format(seq(start_date, by="day", length.out=number_of_days), "%m/%d/%y")
@@ -30,9 +43,20 @@ dfhop <- dfhop[dfhop$Country == "Germany" |
                dfhop$Country == "Italy"  |
                dfhop$Country == "South Korea" |
                dfhop$Country == "UK"  |
+               dfhop$Country == "US Total" |
+#               dfhop$Country == "China Total" |
                dfhop$Country == "Iran" ,]
 
-plot <- ggplot(dfhop, aes(x = Date, y = Number)) + geom_line(aes(color=Country)) + geom_point()
-       
-test <- ggplot(dfhop, aes(x = date, y = number, group=1)) + geom_line()+
-  geom_point()
+
+dfhop_lastx <- dfhop[dfhop$Date > as.POSIXct(Sys.Date(),format="%m/%d/%y")
+                     - as.difftime(10, unit = "days"),]
+
+
+plot <- ggplot(dfhop, aes(x = Date, y = Number)) +
+    geom_line(aes(color=Country)) +
+    geom_point()
+
+plot <- ggplot(dfhop_lastx, aes(x = Date, y = Number)) +
+    geom_line(aes(color=Country)) +
+    geom_point()
+
