@@ -39,17 +39,21 @@ dfhop$date <- as.POSIXct(strptime(dfhop$date, format="%m/%d/%y"))
 colnames(dfhop) <- c("Province/State", "Country","Lat","Long","Date","Number")
 
 
-dfhop <- dfhop[dfhop$Country == "Germany" |
-               dfhop$Country == "Italy"  |
-               dfhop$Country == "South Korea" |
-               dfhop$Country == "UK"  |
-               dfhop$Country == "US Total" |
-#               dfhop$Country == "China Total" |
-               dfhop$Country == "Iran" ,]
+dfhop <- dfhop[dfhop$Country == "Germany" 
+#            |  dfhop$Country == "Italy"  
+             |  dfhop$Country == "Spain"  
+             |  dfhop$Country == "France"  
+             |  dfhop$Country == "Austria" 
+#            |  dfhop$Country == "South Korea" 
+             |  dfhop$Country == "UK"  
+             |  dfhop$Country == "US Total" 
+#            |  dfhop$Country == "China Total" 
+#            |  dfhop$Country == "Iran"
+              ,]
 
 
 dfhop_lastx <- dfhop[dfhop$Date > as.POSIXct(Sys.Date(),format="%m/%d/%y")
-                     - as.difftime(10, unit = "days"),]
+                     - as.difftime(15, unit = "days"),]
 
 
 plot <- ggplot(dfhop, aes(x = Date, y = Number)) +
