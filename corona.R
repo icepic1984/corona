@@ -29,7 +29,7 @@ dfhop <- rbind(dfhop, china_total)
 days <- format(seq(start_date, by="day", length.out=number_of_days), "%m/%d/%y")
 days<-gsub("0(\\d)", "\\1", days)
 
-# Convert dates into varibale 
+# Convert dates into varibale
 dfhop <- gather(dfhop,all_of(days),key="date",value="number")
 
 # Convert dates from string to date type
@@ -39,15 +39,15 @@ dfhop$date <- as.POSIXct(strptime(dfhop$date, format="%m/%d/%y"))
 colnames(dfhop) <- c("Province/State", "Country","Lat","Long","Date","Number")
 
 
-dfhop <- dfhop[dfhop$Country == "Germany" 
-#            |  dfhop$Country == "Italy"  
-             |  dfhop$Country == "Spain"  
-             |  dfhop$Country == "France"  
-             |  dfhop$Country == "Austria" 
-#            |  dfhop$Country == "South Korea" 
-             |  dfhop$Country == "UK"  
-             |  dfhop$Country == "US Total" 
-#            |  dfhop$Country == "China Total" 
+dfhop <- dfhop[dfhop$Country == "Germany"
+#            |  dfhop$Country == "Italy"
+             |  dfhop$Country == "Spain"
+             |  dfhop$Country == "France"
+             |  dfhop$Country == "Austria"
+#            |  dfhop$Country == "South Korea"
+             |  dfhop$Country == "UK"
+             |  dfhop$Country == "US Total"
+#            |  dfhop$Country == "China Total"
 #            |  dfhop$Country == "Iran"
               ,]
 
@@ -61,6 +61,6 @@ plot <- ggplot(dfhop, aes(x = Date, y = Number)) +
     geom_point()
 
 plot <- ggplot(dfhop_lastx, aes(x = Date, y = Number)) +
-    geom_line(aes(color=Country)) +
+    geom_line(aews(color=Country)) +
     geom_point()
 
