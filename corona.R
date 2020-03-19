@@ -3,9 +3,11 @@ library(tidyr)
 library(ggplot2)
 library(RCurl)
 
-generate_days <- function(start_date, count)
+generate_days <-function(start, end)
 {
-    days <- format(seq(start_date, by="day", length.out=count), "%m/%d/%y")
+    count <- as.numeric(end - start) + 1
+    print(count)
+    days <- format(seq(start, by="day", length.out=count), "%m/%d/%y")
     days<-gsub("0(\\d)", "\\1", days)
 }
 
@@ -54,19 +56,27 @@ confirmed <- getURL("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/m
 death <- getURL("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv")
 recovered <- getURL("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv")
 
-
-days <- generate_days(as.POSIXct("2020-01-22"),56)
-
 # Read in data
 dfhop_confirmed <- read.table(text=confirmed, check.names=FALSE,  header=TRUE,sep=",", quote = "\"")
 dfhop_death <- read.table(text=death, check.names=FALSE,  header=TRUE,sep=",", quote="\"")
 dfhop_recovered <- read.table(text=recovered, check.names=FALSE,  header=TRUE,sep=",",quote = "\"")
+
+
+#Generate list of days from fith column (start date) and last column name (end date)
+start_day <- names(dfhop_confirmed)[5]
+start_day <- as.POSIXct(strptime(start_day, format="%m/%d/%y"))
+last_day <- names(dfhop_confirmed)[length(names(dfhop_confirmed))]
+last_day <- as.POSIXct(strptime(last_day, format="%m/%d/%y"))
+days <- generate_days(start_day, last_day)
 
 dfhop_confirmed <- calculate_total(dfhop_confirmed,days, "US", "US Total")
 dfhop_confirmed <- calculate_total(dfhop_confirmed,days, "China", "China Total")
 dfhop_confirmed <- calculate_total(dfhop_confirmed,days, "Denmark", "Denmark Total")
 dfhop_confirmed <- calculate_total(dfhop_confirmed,days, "France", "France Total")
 dfhop_confirmed <- calculate_total(dfhop_confirmed,days, "Netherlands", "Netherlands Total")
+
+# Set first day of china to zero in order to merge all countrys into one plot
+dfhop_confirmed[dfhop_confirmed$Country == "China Total",]$"1/22/20" <- 0
 
 dfhop_death <- calculate_total(dfhop_death,days, "US", "US Total")
 dfhop_death <- calculate_total(dfhop_death,days, "China", "China Total")
@@ -108,8 +118,9 @@ dfhop <- rbind(
     calculate_growth(dfhop,"Norway"),
     calculate_growth(dfhop,"Netherlands Total"),
     calculate_growth(dfhop,"France Total"),
-    calculate_growth(dfhop,"Iran (Islamic Republic of)"),
-    calculate_growth(dfhop,"China Total"))
+    calculate_growth(dfhop,"Iran"),
+    calculate_growth(dfhop,"China Total")
+)
 
 #moving average
 dfhop_mean <- dfhop %>% filter(Country == "Spain") %>%
@@ -137,6 +148,46 @@ plot_growth_rate <- ggplot(dfhop_growth_rate, aes(x = Date, y = Mean_Growth_Rate
 plot_confirmed <- ggplot(dfhop, aes(x = Date, y = Confirmed)) +
     geom_line(aes(color=Country)) +
     geom_point()
+
+zero <- dfhop %>%
+    filter(Confirmed < 100)  %>%
+    group_by(Country) %>%
+    mutate(id = 0,
+           Confirmed = 0) 
+
+dfhop_big <- dfhop %>%
+    filter(Confirmed > 100) %>%
+    group_by(Country) %>%
+    mutate(id = row_number() + 1)
+
+
+dfhop_big <- rbind(zero,dfhop_big)
+
+
+base_breaks <- function(n = 10){
+    function(x) {
+        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
+    }
+}
+
+plot_same_start <- ggplot(dfhop_big, aes(x = id, y = Confirmed)) +
+    geom_line(aes(color=Country)) +
+    geom_point() +
+    scale_y_continuous(trans = 'log10', breaks = base_breaks(),
+                        labels = prettyNum)  + 
+    theme(panel.grid.minor = element_blank())
+
+plot_same_start <- ggplot(dfhop_big, aes(x = id, y = Confirmed)) +
+    geom_line(aes(color=Country)) +
+    geom_point() +
+    theme(panel.grid.minor = element_blank())
+
+    ## scale_y_continuous(trans = log2_trans(),
+    ##                     breaks = trans_breaks("log2", function(x) 2^x),
+    ##                     labels = trans_format("log2", math_format(2^.x)))
+#scale_y_continuous(trans='log10')
+
+
 
 dfhop_filtered <- dfhop  %>% filter(Country == "Germany" |
                                     Country == "Spain" |
