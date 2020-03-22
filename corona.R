@@ -122,6 +122,42 @@ dfhop <- rbind(
     calculate_growth(dfhop,"China Total")
 )
 
+dfhop_histo <- dfhop %>%
+    filter(#Country=="China Total" |
+        Country == "Italy" |
+        Country == "Spain" |
+        Country == "China Total" |
+        Country == "Germany") %>%
+    select(Date,Country,Growth_Confirmed, Growth_Death)
+
+#Change ordering of df
+level.order <- c("Italy","Spain","Germany","China Total")
+dfhop_histo <- dfhop_histo[order(match(dfhop_histo$Country,level.order)),]
+
+p<-ggplot(dfhop_histo, aes(x=Date,y=Growth_Confirmed, fill=Country, color=Country, alpha=Country)) +
+    geom_bar(stat="identity" , position="identity") +
+    scale_colour_manual(values=c("Germany"="blue","Italy"="red","Spain"="green","China Total"="black")) +
+    scale_fill_manual(values=c("Germany"="lightblue","Italy"="pink","Spain"="lightgreen","China Total"="gray")) +
+    scale_alpha_manual(values=c("Germany"=0.1, "Italy"=1,"Spain"=0.5,"China Total"=0.7))    
+
+
+p<-ggplot(dfhop_histo, aes(x=Date,y=Growth_Death, fill=Country, color=Country, alpha=Country)) +
+    geom_bar(stat="identity" , position="identity") +
+    scale_colour_manual(values=c("Germany"="blue","Italy"="red","Spain"="green","China Total"="black")) +
+    scale_fill_manual(values=c("Germany"="lightblue","Italy"="pink","Spain"="lightgreen","China Total"="gray")) +
+    scale_alpha_manual(values=c("Germany"=0.1, "Italy"=1,"Spain"=0.5,"China Total"=0.7))    
+
+
+p<-ggplot(dfhop_histo, aes(x=Date)) +
+    geom_bar(aes(y=Growth_Confirmed,fill=Country), alpha=c(0.3,0.9),stat="identity" , position="identity")
+   # geom_bar(aes(y=Growth_Death,fill=Country),stat="identity",alpha=0.9)
+    
+
+p<-ggplot(dfhop_histo, aes(x=Date)) +
+    geom_bar(aes(y=Growth_Confirmed,fill=Country),stat="identity",alpha=.3,fill='lightblue',color='lightblue4') +
+    geom_bar(aes(y=Growth_Death,fill=Country),stat="identity",alpha=.3,fill='red',color='red')
+
+
 #moving average
 dfhop_mean <- dfhop %>% filter(Country == "Spain") %>%
     mutate(Mean_Growth=rollapply(
